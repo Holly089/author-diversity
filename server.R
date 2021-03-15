@@ -1,18 +1,37 @@
 shinyServer(function(input, output, session) {
   
-  authorsReact <- reactive({ 
-    authorRang = dplyr::filter(authors, authors$date >= input$Dates[1] & authors$date <= input$Dates[2])
+  Selected<-reactiveValues(dates=NULL)
+  
+  
+  observeEvent(input$DatesL, Selected$dates<-(input$DatesL))
+  observeEvent(input$DatesG, Selected$dates<-(input$DatesG))
+  
+  #observeEvent(Selected$dates, updateSelectInput(session, "DatesL", selected=Selected$dates))
+  #observeEvent(Selected$dates, updateSelectInput(session, "DatesG", selected=Selected$dates))
+
+  
+  authorsReact <- reactive({
+    if (input$missingDatesG == TRUE){authors$date[is.na(authors$date)] <- Selected$dates[1]}
+    authorRang = dplyr::filter(authors, authors$date >= Selected$dates[1] & authors$date <= Selected$dates[2])
     dplyr::distinct(authorRang, author_name, .keep_all = TRUE)
   })
   
+  #gender_count <- length(unique(authorsReact()$gender))
+  gender_count <- reactive({ 
+    authorRang = dplyr::filter(authors, authors$date >= Selected$dates[1] & authors$date <= Selected$dates[2])
+    #length(unique(authorRang$gender))
+    dplyr::distinct(authorRang, gender, .keep_all = TRUE)
+  
+  })
+  
+ # print(length(gender_count()))
   
   output$bar <- renderPlot({
-    color <- c("blue", "red", 'green')
+    #color <- c("blue", "red", 'green')
     ggplot(data = authorsReact(), 
            aes(y=gender)) +
-      geom_bar(fill = color) +
-      #coord_flip() +
-      xlim(0,40) +
+      geom_bar(fill = 'green') +
+      xlim(0,50) +
       geom_label(stat='count', aes(label=..count..))
     
   })
@@ -21,31 +40,74 @@ shinyServer(function(input, output, session) {
     authorsReact()
   })
 
+ # country_counts <- reactive({counts = authorsReact() %>% count(country.1) 
+  #})
   
-  place_data <- reactive({ 
-    counts = authorsReact() %>% count(country.1)
-    data = left_join(counts, world_spdf@data, by =  c("country.1" = 'NAME'))
-    merge(world_spdf, data, by.x = "NAME", by.y = "country.1")
-    
-    
-  })
-    
-  #country
+  # place_data <- reactive({ 
+  #   counts = authorsReact() %>% count(country.1)
+  #   data = left_join(world_spdf@data, counts,  by =  c('NAME' = "country.1"))
+  #   data$n[is.na(data$n)] <- 0
+  #   merge(world_spdf, data, by.x = "NAME", by.y = "NAME", all.x = TRUE)
+  #   
+  #   
+  # })
+  
+
   output$mymap <- renderLeaflet({
-    leaflet(place_data()) %>%
-      addProviderTiles(provider = input$provider, options = providerTileOptions(noWrap = FALSE)) %>%
-      addPolygons() %>%
-      # addPolygons(weight=1, opacity = 1.0,color = 'white',
-      #             fillOpacity = 0.9, smoothFactor = 0.5,
-      #             fillColor = ~colorBin('RdBu',n)(n),
-      #             label = ~n) %>%
-      # addLegend(
-      #   "topright",
-      #   pal = colorBin('RdBu', place_data@data$n),
-      #   values = place_data@data$n, 
-      #   opacity = 0.9
-      # ) %>%
-      addEasyButton(easyButton(icon="fa-globe", title="Zoom to high level", onClick=JS("function(btn, map){ map.setZoom(1.5); }")))
+    
+    # Add data to map
+    #  to get the counts
+    if (input$missingDatesL == TRUE){authors$date[is.na(authors$date)] <- Selected$dates[1]}
+    datafiltered <- filter(authors, authors$date >= Selected$dates[1] & authors$date <= Selected$dates[2])
+    datafiltered <- datafiltered %>% count(country.1)
+    
+    #add the zeros back on
+    results1 = setdiff(world_spdf@data$NAME,datafiltered$country.1)
+    results1 = data.frame(results1)
+    results1$n = 0
+    names(results1)[1] <- "country.1"
+    
+    #add back on to spacial data
+    datafiltered = rbind(datafiltered, results1)
+    ordercounties <- match(world_spdf@data$NAME, datafiltered$country.1)
+    #ordercounties <- merge(world_spdf, datafiltered, by.x = "NAME", by.y = "country.1", all.x = TRUE)
+    world_spdf@data <- datafiltered[ordercounties, ]
+  
+    
+  
+    pal <- colorBin("YlOrRd", domain = world_spdf$n, bins = c(0,1, 2, 4, 6, 8, 10, 12, Inf))
+    
+    # # labels
+     labels <- sprintf("%s: %g", world_spdf$country.1, world_spdf$n) %>%
+       lapply(htmltools::HTML)
+     
+   
+     # Create leaflet
+    l <- leaflet(world_spdf) %>%
+      addTiles() %>%
+      setView(lat = 10, lng = 8, zoom=1)%>%
+      addPolygons(
+        fillColor = ~ pal(n),
+        fillOpacity  = 0.8,
+        color = "black",
+        weight = 3,
+        label = labels
+      ) %>%
+      
+      # # legend
+      leaflet::addLegend(
+        pal = pal, values = ~n,
+        opacity = 0.7, title = NULL
+      )
+  })
+  
+  output$placetable = DT::renderDataTable({
+    as.data.frame(place_data())
+  })
+  
+  
+  output$missingInfo = DT::renderDataTable({
+    dplyr::filter(authors,  is.na(authors$gender) | is.na(authors$country.1))
   })
   
 })
