@@ -1,7 +1,7 @@
 # author-diversity
 
 
-The purpose of this R shiny app is to look at the diversity of authors I have been reading in terms of gender and country of birth. 
+The purpose of this R shiny app is to look at the diversity of authors I have been reading in terms of gender and country of birth as part of #diversifyyorbookshelf.
 
 Created using data scraped from my Goodreads account. 
 The starting URL for the web scraper is the read page in the following format: table view, 20 per page, sorted by date. 
