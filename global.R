@@ -25,13 +25,13 @@ world_spdf <- readOGR(
   verbose=FALSE
 )
 
-dates$date[dates$date == 'null'] <- NA #"Mar 10, 2018" #if date missing set to the start date
+dates$date[dates$date == 'null'] <- NA 
 dates = dates[, names(dates) %in% c("title","date")] 
 
 # set up the data
 authors = left_join(authors, dates, by = "title")
 
-authors$date[is.na(authors$date)] <- NA #"May 4, 2018"
+authors$date[is.na(authors$date)] <- NA
 authors$date <- as.Date(authors$date,format = "%b %d, %Y")
 
 
@@ -41,7 +41,6 @@ enddate <- sort(authors$date, na.last = FALSE)[length(sort(authors$date, na.last
 
 
 #col palet
-
 color <- c("blue", "red", 'green')
 
 

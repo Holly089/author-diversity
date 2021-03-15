@@ -2,11 +2,11 @@
 shinyUI(
   fluidPage(
     useShinyjs(),
-    titlePanel("author diversity"),
+    titlePanel("Author Diversity"),
     
     tabsetPanel(
       tabPanel("Gender",
-               h3("gender of authors"),
+               h3("Gender Of Authors"),
                
                plotOutput(outputId = "bar"),
                
@@ -56,13 +56,13 @@ shinyUI(
     
       ),
       
-      tabPanel("Data Set",
+      tabPanel("Data Sets",
                h3("The Data Being Used"),
                DT::dataTableOutput("mytable"),
                DT::dataTableOutput("placetable")
       ),
       tabPanel("Missing Info",
-               h3("Authors with missing Diversity Info"),
+               h3("Authors With Missing Diversity Info"),
                DT::dataTableOutput("missingInfo")
       )
   

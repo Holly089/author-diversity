@@ -1,24 +1,15 @@
 shinyServer(function(input, output, session) {
   
-  Selected<-reactiveValues(dates=NULL)
-  
-  
-  observeEvent(input$DatesL, Selected$dates<-(input$DatesL))
-  observeEvent(input$DatesG, Selected$dates<-(input$DatesG))
-  
-  #observeEvent(Selected$dates, updateSelectInput(session, "DatesL", selected=Selected$dates))
-  #observeEvent(Selected$dates, updateSelectInput(session, "DatesG", selected=Selected$dates))
-
   
   authorsReact <- reactive({
-    if (input$missingDatesG == TRUE){authors$date[is.na(authors$date)] <- Selected$dates[1]}
-    authorRang = dplyr::filter(authors, authors$date >= Selected$dates[1] & authors$date <= Selected$dates[2])
+    if (input$missingDatesG == TRUE){authors$date[is.na(authors$date)] <- input$DatesG[1]}
+    authorRang = dplyr::filter(authors, authors$date >= input$DatesG[1] & authors$date <= input$DatesG[2])
     dplyr::distinct(authorRang, author_name, .keep_all = TRUE)
   })
   
   #gender_count <- length(unique(authorsReact()$gender))
   gender_count <- reactive({ 
-    authorRang = dplyr::filter(authors, authors$date >= Selected$dates[1] & authors$date <= Selected$dates[2])
+    authorRang = dplyr::filter(authors, authors$date >= input$DatesG[1] & authors$date <= input$DatesG[2])
     #length(unique(authorRang$gender))
     dplyr::distinct(authorRang, gender, .keep_all = TRUE)
   
@@ -40,25 +31,14 @@ shinyServer(function(input, output, session) {
     authorsReact()
   })
 
- # country_counts <- reactive({counts = authorsReact() %>% count(country.1) 
-  #})
-  
-  # place_data <- reactive({ 
-  #   counts = authorsReact() %>% count(country.1)
-  #   data = left_join(world_spdf@data, counts,  by =  c('NAME' = "country.1"))
-  #   data$n[is.na(data$n)] <- 0
-  #   merge(world_spdf, data, by.x = "NAME", by.y = "NAME", all.x = TRUE)
-  #   
-  #   
-  # })
   
 
   output$mymap <- renderLeaflet({
     
     # Add data to map
     #  to get the counts
-    if (input$missingDatesL == TRUE){authors$date[is.na(authors$date)] <- Selected$dates[1]}
-    datafiltered <- filter(authors, authors$date >= Selected$dates[1] & authors$date <= Selected$dates[2])
+    if (input$missingDatesL == TRUE){authors$date[is.na(authors$date)] <- input$DatesL[1]}
+    datafiltered <- filter(authors, authors$date >= input$DatesL[1] & authors$date <= input$DatesL[2])
     datafiltered <- datafiltered %>% count(country.1)
     
     #add the zeros back on
@@ -100,6 +80,15 @@ shinyServer(function(input, output, session) {
         opacity = 0.7, title = NULL
       )
   })
+  
+  
+  place_data <- reactive({
+    counts = authorsReact() %>% count(country.1)
+    data = left_join(world_spdf@data, counts,  by =  c('NAME' = "country.1"))
+    data$n[is.na(data$n)] <- 0
+    merge(world_spdf, data, by.x = "NAME", by.y = "NAME", all.x = TRUE)
+  })
+
   
   output$placetable = DT::renderDataTable({
     as.data.frame(place_data())
