@@ -15,7 +15,7 @@ As you can enter read books on goodreads without a date there is a check box to 
 The app will ensure that authors are only counted once within the range of a slider. i.e., if I read a series of books by the dame author they would only be counted once assuming I read one or more of the series in the date sliders range. 
 
 
-What I learnt from this exercise regarding author diversity is that I mainly read American authors. I will in future be looking to read books by more Asian, European (not including the UK) and South American authors who are drastically lacking from my location diversity.
+What I learnt from this exercise regarding author diversity is that I mainly read American authors. I will in future be looking to read books by more European (not including the UK) and South American authors who are drastically lacking from my location diversity, along with a few more Asian and African authors.
 I am rather happy with the gender split between Male and Female gendered authors however what is desperately lacking is gender diverse authors and I will be looking to read more books written by gender diverse people going forward.
 
 
